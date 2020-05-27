@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form id="signUpForm">
+        <p>
+          <label for="newEmployee">Employee Username</label>
+          <input type="text" name="newEmployee" id="newEmployee">
+        </p>
+        <button id="signUp">Sign Up</button>
+      </form>
+      <form id="signInForm">
+        <p>
+          <label for="username">Username:</label>
+          <input type="text" name="username" id="username">
+        </p>
+        <button id="signIn">Sign In</button>
+      </form>
+      <button id="signOut">Sign Out</button>
+      <hr>
+      <form>
+        <p>
+          <label for="jobTitle">Job Title:</label>
+          <input type="text" name="jobTitle" id="jobTitle">
+        </p>
+        <p>
+          <label for="salary">Salary</label>
+          <input type="number" name="salary" id="salary">
+        </p>
+        <button id="addSalary">Add Grocery</button>
+      </form>
+      <hr>
+      <ol id="salaries"></ol>
+    
+      <!-- URL link probably is wrong, went through this too fast -->
+      <script src="http://localhost:3000"></script>
+      <script>
+    
+        const checkUser = () => {
+          if (localStorage.getItem('user')) {
+            axios.get(`/api/users/${localStorage.getItem('user')}`)
+              .then(({ data }) => {
+                
+                localStorage.setItem('user', data.user.id)
+    
+                data.salaries.forEach(salary => {
+                  let salaryElem = document.createElement('li')
+                  salaryElem.textContent = `
+                  ${salary.name} | Quantity: ${salary.quantity}
+                `
+                  document.getElementById('salaries').append(salaryElem)
+                })
+    
+                document.getElementById('signUpForm').style.display = 'none'
+                document.getElementById('signInForm').style.display = 'none'
+                document.getElementById('signOut').style.display = 'block'
+              })
+              .catch(err => console.error(err))
+          }
+        }
+    
+        document.getElementById('signIn').addEventListener('click', event => {
+          event.preventDefault()
+          axios.get(`/api/users/${document.getElementById('username').value}`)
+            .then(({ data }) => {
+    
+              localStorage.setItem('user', data.user.id)
+    
+              data.groceries.forEach(salary => {
+                let salaryElem = document.createElement('li')
+                salaryElem.textContent = `
+                  ${salary.name} | Quantity: ${salary.quantity}
+                `
+                document.getElementById('groceries').append(groceryElem)
+              })
+    
+              document.getElementById('signUpForm').style.display = 'none'
+              document.getElementById('signInForm').style.display = 'none'
+              document.getElementById('signOut').style.display = 'block'
+            })
+            .catch(err => console.error(err))
+        })
+    // Add role of employee here
+        document.getElementById('addSalary').addEventListener('click', event => {
+          event.preventDefault()
+          axios.post('/api/salaries', {
+            name: document.getElementById('salary').value,
+            quantity: document.getElementById('quantity').value,
+            userid: parseInt(localStorage.getItem('user'))
+          })
+            .then(() => {
+              let salaryElem = document.createElement('li')
+              salaryElem.textContent = `
+                  ${document.getElementById('salary').value} | Quantity: ${document.getElementById('quantity').value}
+                `
+              document.getElementById('salaries').append(salaryElem)
+            })
+            .catch(err => console.error(err))
+        })
+    
+        document.getElementById('signUp').addEventListener('click', event => {
+          event.preventDefault()
+          axios.post('/api/users', {
+            username: document.getElementById('newEmployee').value
+          })
+            .then(({ data }) => {
+              localStorage.setItem('user', data.insertId)
+              document.getElementById('signUpForm').style.display = 'none'
+              document.getElementById('signInForm').style.display = 'none'
+              document.getElementById('signOut').style.display = 'block'
+            })
+        })
+    
+        document.getElementById('signOut').addEventListener('click', () => {
+          localStorage.removeItem('user')
+          document.getElementById('salaries').innerHTML = ''
+          document.getElementById('signUpForm').style.display = 'block'
+          document.getElementById('signInForm').style.display = 'block'
+          document.getElementById('signOut').style.display = 'none'
+        })
+    
+        checkUser()
+    
+      </script>
+</body>
+</html>
